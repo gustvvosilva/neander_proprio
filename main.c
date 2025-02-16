@@ -1,27 +1,38 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-int main(){
+int main(int argc, char **argv){
 
-    FILE *file = fopen("mult_positivo.mem", "rb");
+    FILE *file = fopen(argv[1], "rb");
+
+    if(!file) {
+        printf("Erro ao abrir arquivo.\n");
+        return 1;
+    }
     
     __uint8_t bytes[256];
     __uint8_t byte[1];
-    int i2 = 0;
+    int getByte = 0;
+    __uint32_t memID[1];
 
     __uint8_t ac = 0, pc = 0;
     bool neg, zer;
 
-    for(int i = 0; i < 516; i++) {
+    fread(memID, 1, 4, file);
+    if(*memID != 0x52444e03) {
+        printf("O arquivo fornecido não corresponde á um formato conhecido do neander.%08x\n", *memID);
+        fclose(file);
+        return 1;
+    }
 
-        if(i < 4)
-            fread(byte, 1, 1, file);
-        else if(i % 2 == 1)
+    for(int i = 0; i < 512; i++) {
+
+        if(i % 2 == 1)
             fread(byte, 1, 1, file);
         else {
             fread(byte, 1, 1, file);
-            bytes[i2] = byte[0];
-            i2++;
+            bytes[getByte] = *byte;
+            getByte++;
         }
     }
     fclose(file);
@@ -42,13 +53,13 @@ int main(){
         else
             zer = false;
 
-        printf("AC:%02x PC:%02x %s %s", ac, pc, neg?"neg":"pos", zer?"zer":"nze");
-        for(int i = 0; i < 256; i++){
-            if(i % 16 == 0)
-                printf("\n");
-            printf("%02x ", bytes[i]);
-        }
-        printf("\n===================================================\n");
+        // printf("AC:%02x PC:%02x %s %s", ac, pc, neg?"neg":"pos", zer?"zer":"nze");
+        // for(int i = 0; i < 256; i++){
+        //     if(i % 16 == 0)
+        //         printf("\n");
+        //     printf("%02x ", bytes[i]);
+        // }
+        // printf("\n===================================================\n");
             
         switch(bytes[pc]) {
 
@@ -93,14 +104,16 @@ int main(){
 
         pc++;
     }
-    printf("AC:%02x PC:%02x %s %s", ac, pc, neg?"neg":"pos", zer?"zer":"nze");
-        for(int i = 0; i < 256; i++){
-            if(i % 16 == 0)
-                printf("\n");
-            printf("%02x ", bytes[i]);
-        }
-        printf("\n===================================================\n");
-    printf("cabo\n");
 
+    printf("\nAC: %02x - PC: %02x\n"
+        "flags: N(%c) - Z(%c)\n", ac, pc, neg?'*':' ', zer?'*':' ');
+    printf("\nMemória final =========================================");
+    for(int i = 0; i < 256; i++){
+        if(i % 16 == 0)
+            printf("\n%07x ", i);
+        printf("%02x ", bytes[i]);
+    }
+    printf("\n=======================================================\n");
+    printf("Finalizou com sucesso!\n\n");
     return 0;
 }

@@ -1,9 +1,9 @@
 all:
-	gcc main.c -o main
+	gcc main.c -o neander
 
 run: all
 	clear
-	./main
+	./neander mult_positivo.mem
 
 clean:
-	rm -f main
+	rm -f neander
