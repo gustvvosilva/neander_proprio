@@ -1,6 +1,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#define STA 0x10
+#define LDA 0x20
+#define ADD 0x30
+#define NOT 0x60
+#define JMP 0x80
+#define JN 0x90
+#define JZ 0xA0
+#define HLT 0xF0
+
 int main(int argc, char **argv){
 
     FILE *file = fopen(argv[1], "rb");
@@ -14,13 +23,13 @@ int main(int argc, char **argv){
     __uint8_t byte[1];
     int getByte = 0;
     __uint32_t memID[1];
-
     __uint8_t ac = 0, pc = 0;
     bool neg, zer;
 
     fread(memID, 1, 4, file);
+    // Little Endian.
     if(*memID != 0x52444e03) {
-        printf("O arquivo fornecido não corresponde á um formato conhecido do neander.%08x\n", *memID);
+        printf("O arquivo fornecido não corresponde á um formato conhecido do neander.\n");
         fclose(file);
         return 1;
     }
@@ -41,7 +50,7 @@ int main(int argc, char **argv){
     // bytes[0x80] = 0xF7;
     // bytes[0x81] = 0xFB;
 
-    while(bytes[pc] != 0xf0) {
+    while(bytes[pc] != HLT) {
 
         if(ac >= 0x80)
             neg = true;
@@ -52,49 +61,41 @@ int main(int argc, char **argv){
             zer = true;
         else
             zer = false;
-
-        // printf("AC:%02x PC:%02x %s %s", ac, pc, neg?"neg":"pos", zer?"zer":"nze");
-        // for(int i = 0; i < 256; i++){
-        //     if(i % 16 == 0)
-        //         printf("\n");
-        //     printf("%02x ", bytes[i]);
-        // }
-        // printf("\n===================================================\n");
             
         switch(bytes[pc]) {
 
-            case 0x10:
+            case STA:
             pc++;
             bytes[bytes[pc]] = ac;
             break;
 
-            case 0x20:
+            case LDA:
             pc++;
             ac = bytes[bytes[pc]];
             break;
 
-            case 0x30:
+            case ADD:
             pc++;
             ac += bytes[bytes[pc]];
             break;
 
-            case 0x60:
+            case NOT:
             ac = ~ac;
             break;
 
-            case 0x80:
+            case JMP:
             pc++;
             pc = bytes[pc] - 0x01;
             break;
 
-            case 0x90:
+            case JN:
             pc++;
             if(neg) {
                 pc = bytes[pc] - 0x01;
             }
             break;
 
-            case 0xa0:
+            case JZ:
             pc++;
             if(zer) {
                 pc = bytes[pc] - 0x01;
