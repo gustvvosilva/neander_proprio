@@ -1,18 +1,8 @@
-#include <stdio.h>
-#include <stdbool.h>
-
-#define STA 0x10
-#define LDA 0x20
-#define ADD 0x30
-#define NOT 0x60
-#define JMP 0x80
-#define JN 0x90
-#define JZ 0xA0
-#define HLT 0xF0
+#include "neander.h"
 
 int main(int argc, char **argv){
 
-    FILE *file = fopen(argv[1], "rb");
+    FILE *file = fopen(argv[argc - 1], "rb");
 
     if(!file) {
         printf("Erro ao abrir arquivo.\n");
@@ -34,6 +24,7 @@ int main(int argc, char **argv){
         return 1;
     }
 
+    // Separando apenas os 256 Bytes que importam para nosso programa. Fica muito mais fácil trabalhar com esse formato.
     for(int i = 0; i < 512; i++) {
 
         if(i % 2 == 1)
@@ -52,6 +43,7 @@ int main(int argc, char **argv){
 
     while(bytes[pc] != HLT) {
 
+        // Flags.
         if(ac >= 0x80)
             neg = true;
         else
